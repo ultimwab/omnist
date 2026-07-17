@@ -3,342 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricko</title>
+    <title>Drag the Circle</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background: #1a1a1a;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #222;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            color: white;
+            align-items: center;
+            height: 100vh;
             overflow: hidden;
         }
-
-        #game-container {
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
         canvas {
-            background: linear-gradient(to bottom, #87CEEB 50%, #557a2b 50%);
-            display: block;
-        }
-
-        #ui-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-            pointer-events: none;
-        }
-
-        #msg-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            font-weight: 900;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
-            text-align: center;
-            pointer-events: none;
-            transition: all 0.2s ease;
-        }
-
-        .controls-hint {
-            margin-top: 15px;
-            color: #aaa;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        /* Flash animations for scores */
-        .score-six { color: #f1c40f; animation: pulse 0.5s; }
-        .score-four { color: #2ecc71; animation: pulse 0.5s; }
-        .score-out { color: #e74c3c; animation: pulse 0.5s; }
-
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(0.5); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+            background-color: #333;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            cursor: default;
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="ui-overlay">Score: <span id="score">0</span></div>
-        <div id="msg-overlay"></div>
-        <canvas id="gameCanvas" width="800" height="500"></canvas>
-    </div>
-
-    <div class="controls-hint">
-        <strong>Controls:</strong> Press <strong>SPACEBAR</strong> to swing the bat when the ball gets close!
-    </div>
+    <canvas id="canvas" width="600" height="600"></canvas>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const scoreEl = document.getElementById('score');
-        const msgEl = document.getElementById('msg-overlay');
 
-        // Game State
-        let score = 0;
-        let gameState = 'bowling'; // bowling, shot-taken, out, reset
-        let batSwinging = false;
-        let batTiming = 0;
+        // Center of the canvas
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
 
-        // Pseudo-3D Ball Object
-        let ball = {
-            x: 400,       // Center X
-            y: 230,       // Horizon Y (starts at bowler's hand)
-            z: 0,         // Distance from bowler (0 = far away, 1 = at batsman)
-            radius: 4,    // Initial screen radius
-            speedZ: 0.015, // Speed coming forward
-            vx: 0,        // Lateral movement (swing/spin)
-            vy: 0,        // Pitch physics
-            gravity: 0.1,
-            bounceY: 380, // Where the pitch is in 2D space
-            hasBounced: false
+        // Big outer circle configuration
+        const bigRadius = 200;
+
+        // Small inner circle configuration
+        let smallCircle = {
+            x: cx,
+            y: cy,
+            radius: 30,
+            color: '#ff4757',
+            isDragging: false
         };
 
-        // Bat parameters (3D perspective)
-        let bat = {
-            x: 400,
-            y: 430,
-            width: 80,
-            height: 15
-        };
+        // Mouse offset from the center of the small circle when clicked
+        let offsetX = 0;
+        let offsetY = 0;
 
-        function resetBall() {
-            ball.x = 380 + Math.random() * 40; // Randomize delivery angle
-            ball.y = 220; 
-            ball.z = 0;
-            ball.radius = 3;
-            ball.speedZ = 0.012 + Math.random() * 0.008; // Variable speed
-            ball.vx = (Math.random() - 0.5) * 1.5; // Slight swing
-            ball.vy = 1; 
-            ball.hasBounced = false;
-            gameState = 'bowling';
+        function draw() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw the big, unfilled outer circle
+            ctx.beginPath();
+            ctx.arc(cx, cy, bigRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.closePath();
+
+            // 2. Draw the small, filled inner circle
+            ctx.beginPath();
+            ctx.arc(smallCircle.x, smallCircle.y, smallCircle.radius, 0, Math.PI * 2);
+            ctx.fillStyle = smallCircle.color;
+            ctx.fill();
+            ctx.closePath();
         }
 
-        // Handle Input
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !batSwinging && gameState === 'bowling') {
-                batSwinging = true;
-                batTiming = 0;
-                
-                // Check hit timing based on Ball's Z depth
-                // Perfect hit zone is roughly z between 0.88 and 0.96
-                setTimeout(() => {
-                    checkHit();
-                }, 80); 
+        // Helper function to get mouse positions relative to canvas
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        // Listen for mouse press down
+        canvas.addEventListener('mousedown', function(e) {
+            const mouse = getMousePos(e);
+            
+            // Calculate distance between mouse and small circle center
+            const dx = mouse.x - smallCircle.x;
+            const dy = mouse.y - smallCircle.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // If the distance is less than the radius, the mouse is inside the small circle
+            if (distance < smallCircle.radius) {
+                smallCircle.isDragging = true;
+                canvas.style.cursor = 'grabbing';
+                // Remember exactly where we grabbed it
+                offsetX = mouse.x - smallCircle.x;
+                offsetY = mouse.y - smallCircle.y;
             }
         });
 
-        function checkHit() {
-            if (ball.z > 0.85 && ball.z < 0.98) {
-                // Calculated timing accuracy
-                let accuracy = Math.abs(ball.z - 0.92); 
-                
-                if (accuracy < 0.03) {
-                    showResult('SIX!', 'score-six');
-                    score += 6;
-                } else if (accuracy < 0.06) {
-                    showResult('FOUR!', 'score-four');
-                    score += 4;
-                } else {
-                    showResult('1 Run', '');
-                    score += 1;
-                }
-                gameState = 'shot-taken';
-                ball.speedZ = -0.03; // Ball flies backward into the stadium
-                ball.vx = (Math.random() - 0.5) * 15;
-                ball.vy = -10 - Math.random() * 10;
-            } else {
-                // Swung too early or too late
-                if (ball.z < 0.85) {
-                    showResult('TOO EARLY!', 'score-out');
-                } else {
-                    showResult('TOO LATE!', 'score-out');
-                }
-            }
-            scoreEl.innerText = score;
-        }
+        // Listen for mouse movement
+        canvas.addEventListener('mousemove', function(e) {
+            const mouse = getMousePos(e);
 
-        function showResult(text, className) {
-            msgEl.innerText = text;
-            msgEl.className = className;
-            setTimeout(() => {
-                msgEl.innerText = '';
-            }, 1200);
-        }
-
-        function drawField() {
-            // Sky
-            ctx.fillStyle = '#87CEEB';
-            ctx.fillRect(0, 0, canvas.width, 250);
-
-            // Ground/Grass
-            ctx.fillStyle = '#557a2b';
-            ctx.fillRect(0, 250, canvas.width, 250);
-
-            // 3D Pitch perspective lines
-            ctx.fillStyle = '#d2b48c'; // Pitch color
-            ctx.beginPath();
-            ctx.moveTo(380, 250); // Far left
-            ctx.lineTo(420, 250); // Far right
-            ctx.lineTo(550, 500); // Close right
-            ctx.lineTo(250, 500); // Close left
-            ctx.closePath();
-            ctx.fill();
-
-            // Bowling Crease line (Far)
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(380, 250);
-            ctx.lineTo(420, 250);
-            ctx.stroke();
-
-            // Batting Crease line (Near)
-            ctx.beginPath();
-            ctx.moveTo(275, 460);
-            ctx.lineTo(525, 460);
-            ctx.stroke();
-
-            // Stumps (Far end)
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(397, 230, 2, 20);
-            ctx.fillRect(400, 230, 2, 20);
-            ctx.fillRect(403, 230, 2, 20);
-        }
-
-        function updateBall() {
-            if (gameState === 'bowling') {
-                ball.z += ball.speedZ;
-                ball.x += ball.vx;
-                
-                // Simulating pitch bounce based on Z position
-                if (ball.z >= 0.6 && !ball.hasBounced) {
-                    ball.vy = -4; // bounce upward
-                    ball.hasBounced = true;
-                }
-                
-                if (ball.hasBounced) {
-                    ball.vy += ball.gravity * 8; // bring it down/up naturally
-                } else {
-                    ball.vy += ball.gravity * 2;
-                }
-
-                ball.y += ball.vy;
-                
-                // Scale ball radius dynamically based on Z depth
-                ball.radius = 3 + (ball.z * 18); 
-
-                // Check for Clean Bowled / Missed
-                if (ball.z >= 1.05) {
-                    gameState = 'out';
-                    showResult('BOWLED / OUT!', 'score-out');
-                    score = 0; // Reset score on out
-                    scoreEl.innerText = score;
-                }
-            } else if (gameState === 'shot-taken') {
-                // Ball flies away
-                ball.z += ball.speedZ; 
-                ball.x += ball.vx;
-                ball.y += ball.vy;
-                ball.vy += 0.5; // gravity drop
-                ball.radius = Math.max(2, ball.radius * 0.95); // shrink as it gets further
-
-                if (ball.y > 550 || ball.z < -0.2) {
-                    resetBall();
-                }
+            // Check hover style when just moving around
+            if (!smallCircle.isDragging) {
+                const dx = mouse.x - smallCircle.x;
+                const dy = mouse.y - smallCircle.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                canvas.style.cursor = (distance < smallCircle.radius) ? 'pointer' : 'default';
+                return;
             }
 
-            if (gameState === 'out') {
-                setTimeout(() => {
-                    resetBall();
-                }, 2000);
-                gameState = 'reset';
+            // Move the circle directly with the mouse pointer
+            smallCircle.x = mouse.x - offsetX;
+            smallCircle.y = mouse.y - offsetY;
+
+            draw();
+        });
+
+        // Listen for mouse release anywhere on screen
+        window.addEventListener('mouseup', function() {
+            if (smallCircle.isDragging) {
+                smallCircle.isDragging = false;
+                canvas.style.cursor = 'pointer';
             }
-        }
+        });
 
-        function drawBall() {
-            if (ball.z < 0 || ball.z > 1.2) return;
-
-            // Ball shadow for 3D depth placement
-            ctx.beginPath();
-            ctx.ellipse(ball.x, Math.min(480, 250 + (ball.z * 230)), ball.radius, ball.radius/3, 0, 0, 2 * Math.PI);
-            ctx.fillStyle = 'rgba(0,0,0,0.25)';
-            ctx.fill();
-
-            // The actual Red Cricket Ball
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
-            
-            // 3D Gradient shading on the ball
-            let gradient = ctx.createRadialGradient(
-                ball.x - ball.radius/3, ball.y - ball.radius/3, ball.radius/10,
-                ball.x, ball.y, ball.radius
-            );
-            gradient.addColorStop(0, '#ff6b6b');
-            gradient.addColorStop(1, '#8b0000');
-            
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            ctx.closePath();
-        }
-
-        function drawBat() {
-            ctx.save();
-            
-            if (batSwinging) {
-                batTiming++;
-                // Swing animation translation & rotation
-                ctx.translate(bat.x, bat.y);
-                ctx.rotate(-Math.PI / 3 + (batTiming * 0.3));
-                ctx.translate(-bat.x, -bat.y);
-                
-                if (batTiming > 10) {
-                    batSwinging = false;
-                }
-            }
-
-            // Draw Cricket Bat
-            ctx.fillStyle = '#d7a15c'; // Wood color
-            ctx.fillRect(bat.x - 10, bat.y - 60, 20, 60); // Blade
-            
-            ctx.fillStyle = '#333'; // Handle grip
-            ctx.fillRect(bat.x - 4, bat.y - 95, 8, 35);
-
-            ctx.restore();
-        }
-
-        // Main Loop
-        function loop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            drawField();
-            updateBall();
-            drawBall();
-            drawBat();
-
-            requestAnimationFrame(loop);
-        }
-
-        // Start Game
-        resetBall();
-        loop();
+        // Initial render
+        draw();
     </script>
 </body>
 </html>
