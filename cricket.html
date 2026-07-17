@@ -3,75 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drag the Circle</title>
+    <title>Cricket Bat Controller</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #222;
+            background: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            justify-content: center;
+            min-height: 100vh;
+            color: white;
             overflow: hidden;
         }
+
+        #game-container {
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
         canvas {
-            background-color: #333;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            cursor: default;
+            background: linear-gradient(to bottom, #87CEEB 40%, #557a2b 40%);
+            display: block;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 14px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <canvas id="canvas" width="600" height="600"></canvas>
+    <div id="game-container">
+        <canvas id="cricketCanvas" width="800" height="500"></canvas>
+    </div>
+
+    <div class="instructions">
+        <strong>Controls:</strong> Click and drag the <strong>red ball</strong> inside the white circle to move the batsman's bat!
+    </div>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('cricketCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Center of the canvas
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-
-        // Big outer circle configuration
-        const bigRadius = 200;
-
-        // Small inner circle configuration
-        let smallCircle = {
-            x: cx,
-            y: cy,
-            radius: 30,
+        // --- Joystick / Control Circle UI Configuration ---
+        const joyX = 100;         // X position of the controller UI
+        const joyY = 100;         // Y position of the controller UI
+        const bigRadius = 60;     // Outer boundary ring
+        
+        let controlBall = {
+            x: joyX,
+            y: joyY,
+            radius: 15,
             color: '#ff4757',
             isDragging: false
         };
 
-        // Mouse offset from the center of the small circle when clicked
-        let offsetX = 0;
-        let offsetY = 0;
+        // --- Cricket Bat Properties ---
+        let bat = {
+            x: 400,               // Dynamic center X controlled by the red ball
+            y: 420,
+            width: 24,
+            height: 70
+        };
 
-        function draw() {
-            // Clear the canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function drawField() {
+            // 1. Draw Pitch and Field Background
+            ctx.fillStyle = '#87CEEB'; // Sky
+            ctx.fillRect(0, 0, canvas.width, 200);
 
-            // 1. Draw the big, unfilled outer circle
+            ctx.fillStyle = '#557a2b'; // Outfield Grass
+            ctx.fillRect(0, 200, canvas.width, 300);
+
+            // 3D Pitch
+            ctx.fillStyle = '#d2b48c'; 
             ctx.beginPath();
-            ctx.arc(cx, cy, bigRadius, 0, Math.PI * 2);
+            ctx.moveTo(380, 200);
+            ctx.lineTo(420, 200);
+            ctx.lineTo(580, 500);
+            ctx.lineTo(220, 500);
+            ctx.closePath();
+            ctx.fill();
+
+            // Batting Crease line
             ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(250, 440);
+            ctx.lineTo(550, 440);
+            ctx.stroke();
+        }
+
+        function drawController() {
+            // 2. Draw the fixed big unfilled circle (The boundary)
+            ctx.beginPath();
+            ctx.arc(joyX, joyY, bigRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
             ctx.lineWidth = 4;
             ctx.stroke();
             ctx.closePath();
 
-            // 2. Draw the small, filled inner circle
+            // 3. Draw the small filled red control ball
             ctx.beginPath();
-            ctx.arc(smallCircle.x, smallCircle.y, smallCircle.radius, 0, Math.PI * 2);
-            ctx.fillStyle = smallCircle.color;
+            ctx.arc(controlBall.x, controlBall.y, controlBall.radius, 0, Math.PI * 2);
+            ctx.fillStyle = controlBall.color;
             ctx.fill();
             ctx.closePath();
         }
 
-        // Helper function to get mouse positions relative to canvas
+        function drawBat() {
+            // 4. Draw the Cricket Bat driven by controlBall offset
+            // Maps the control ball's relative movement (-60 to +60) to the screen pitch width
+            let relativeX = (controlBall.x - joyX) / bigRadius; // Value between -1 and 1
+            bat.x = 400 + (relativeX * 160); // Shifts bat up to 160 pixels left or right
+
+            ctx.save();
+            // Wooden Blade
+            ctx.fillStyle = '#d7a15c';
+            ctx.fillRect(bat.x - bat.width / 2, bat.y, bat.width, bat.height);
+            
+            // Handle Grip
+            ctx.fillStyle = '#111';
+            ctx.fillRect(bat.x - 4, bat.y - 40, 8, 40);
+            ctx.restore();
+        }
+
+        function updateFrame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawField();
+            drawBat();
+            drawController();
+
+            requestAnimationFrame(updateFrame);
+        }
+
+        // --- Interaction Logic ---
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
             return {
@@ -80,55 +154,62 @@
             };
         }
 
-        // Listen for mouse press down
         canvas.addEventListener('mousedown', function(e) {
             const mouse = getMousePos(e);
             
-            // Calculate distance between mouse and small circle center
-            const dx = mouse.x - smallCircle.x;
-            const dy = mouse.y - smallCircle.y;
+            // Check distance from click to the red control ball center
+            const dx = mouse.x - controlBall.x;
+            const dy = mouse.y - controlBall.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // If the distance is less than the radius, the mouse is inside the small circle
-            if (distance < smallCircle.radius) {
-                smallCircle.isDragging = true;
+            if (distance < controlBall.radius) {
+                controlBall.isDragging = true;
                 canvas.style.cursor = 'grabbing';
-                // Remember exactly where we grabbed it
-                offsetX = mouse.x - smallCircle.x;
-                offsetY = mouse.y - smallCircle.y;
             }
         });
 
-        // Listen for mouse movement
         canvas.addEventListener('mousemove', function(e) {
             const mouse = getMousePos(e);
 
-            // Check hover style when just moving around
-            if (!smallCircle.isDragging) {
-                const dx = mouse.x - smallCircle.x;
-                const dy = mouse.y - smallCircle.y;
+            if (!controlBall.isDragging) {
+                // Change cursor to pointer if hovering over the red control ball
+                const dx = mouse.x - controlBall.x;
+                const dy = mouse.y - controlBall.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                canvas.style.cursor = (distance < smallCircle.radius) ? 'pointer' : 'default';
+                canvas.style.cursor = (distance < controlBall.radius) ? 'pointer' : 'default';
                 return;
             }
 
-            // Move the circle directly with the mouse pointer
-            smallCircle.x = mouse.x - offsetX;
-            smallCircle.y = mouse.y - offsetY;
+            // Calculate movement from controller center
+            let dx = mouse.x - joyX;
+            let dy = mouse.y - joyY;
+            let distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
 
-            draw();
-        });
-
-        // Listen for mouse release anywhere on screen
-        window.addEventListener('mouseup', function() {
-            if (smallCircle.isDragging) {
-                smallCircle.isDragging = false;
-                canvas.style.cursor = 'pointer';
+            // Constraint: Keep the small red ball inside the boundary circle
+            if (distanceFromCenter <= bigRadius) {
+                controlBall.x = mouse.x;
+                controlBall.y = mouse.y;
+            } else {
+                // If dragging outside, lock it to the outer circle edge using basic trigonometry
+                let angle = Math.atan2(dy, dx);
+                controlBall.x = joyX + Math.cos(angle) * bigRadius;
+                controlBall.y = joyY + Math.sin(angle) * bigRadius;
             }
         });
 
-        // Initial render
-        draw();
+        window.addEventListener('mouseup', function() {
+            if (controlBall.isDragging) {
+                controlBall.isDragging = false;
+                
+                // Snap the controller ball back to absolute center when released
+                controlBall.x = joyX;
+                controlBall.y = joyY;
+                canvas.style.cursor = 'default';
+            }
+        });
+
+        // Initialize display loop
+        updateFrame();
     </script>
 </body>
 </html>
