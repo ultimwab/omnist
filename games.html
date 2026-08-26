@@ -59,7 +59,7 @@
         /* Tic Tac Toe styles */
         .tictactoe-wrap { display:flex; gap:24px; align-items:flex-start; justify-content:center; flex-wrap:wrap; }
         .board { display:grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap:10px; }
-        .cell { width:100px; height:100px; background: #fff; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2.4rem; cursor:pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.12); }
+        .cell { width:100px; height:100px; background: #fff; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2.4rem; cursor:pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
         .cell.disabled { pointer-events:none; opacity:0.8; }
         .tt-controls { max-width: 320px; background: rgba(255,255,255,0.95); padding:16px; border-radius:10px; box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
         .status { margin-bottom:12px; font-weight:600; }
@@ -72,8 +72,31 @@
         .back { background: transparent; border: 1px solid rgba(0,0,0,0.08); padding: 8px 12px; border-radius:8px; cursor:pointer; }
         .coming-soon { color:#666; }
 
+        /* Memory game styles */
+        .memory-stats { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+        .memory-board { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; width:100%; max-width:520px; }
+        .card {
+            position:relative;
+            width:100%;
+            padding-top:100%; /* square */
+            perspective: 800px;
+        }
+        .card-inner {
+            position:absolute; top:0; left:0; right:0; bottom:0;
+            transition: transform 0.5s; transform-style: preserve-3d; border-radius:8px; cursor:pointer;
+        }
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        .card-face { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; border-radius:8px; backface-visibility: hidden; font-size:2rem; }
+        .card-front { background:#fff; box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+        .card-back { background: linear-gradient(135deg,#667eea,#764ba2); color:white; transform: rotateY(180deg); }
+
+        /* Snake styles */
+        .snake-wrap { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+        #snake-canvas { background:#fafafa; border-radius:8px; box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
+        .snake-controls { max-width:320px; background: rgba(255,255,255,0.95); padding:16px; border-radius:10px; box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
+
         /* Responsive */
-        @media (max-width:700px){ .board { grid-template-columns: repeat(3,70px); grid-template-rows: repeat(3,70px); } .cell{ width:70px; height:70px; font-size:1.6rem; } }
+        @media (max-width:700px){ .board { grid-template-columns: repeat(3,70px); grid-template-rows: repeat(3,70px); } .cell{ width:70px; height:70px; font-size:1.6rem; } .memory-board { grid-template-columns: repeat(4, 1fr); } }
     </style>
 </head>
 <body>
@@ -150,28 +173,50 @@
             </div>
         </div>
 
-        <!-- Memory Game view (placeholder) -->
+        <!-- Memory Game view -->
         <div id="memory" class="view screen">
             <button class="back" data-back>← Back to games</button>
             <div style="height:16px"></div>
             <div class="center">
                 <h2>Memory Game</h2>
-                <p class="coming-soon">Interactive memory game coming soon. For now you can preview the layout below.</p>
-                <div style="width:100%; max-width:600px; background:#f8f8f8; padding:18px; border-radius:10px; text-align:center;">
-                    <p>Board preview: 4x4 cards, flip and match pairs.</p>
-                    <button class="play-btn" onclick="alert('Memory: coming soon')">Start (demo)</button>
+                <div class="memory-stats">
+                    <div>Moves: <span id="mem-moves">0</span></div>
+                    <div>Matches: <span id="mem-matches">0</span>/8</div>
+                    <div>Time: <span id="mem-time">00:00</span></div>
+                </div>
+                <div class="memory-board" id="memory-board"></div>
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button class="play-btn" id="mem-reset">Restart</button>
+                    <button class="play-btn" id="mem-shuffle">Shuffle</button>
                 </div>
             </div>
         </div>
 
-        <!-- Snake view (placeholder) -->
+        <!-- Snake view -->
         <div id="snake" class="view screen">
             <button class="back" data-back>← Back to games</button>
             <div style="height:16px"></div>
-            <div class="center">
-                <h2>Snake</h2>
-                <p class="coming-soon">A playable Snake will be added soon. Arrow keys to control.</p>
-                <button class="play-btn" onclick="alert('Snake: coming soon')">Start (demo)</button>
+            <div class="snake-wrap">
+                <canvas id="snake-canvas" width="420" height="420"></canvas>
+                <div class="snake-controls">
+                    <h3>Snake</h3>
+                    <p>Use arrow keys or WASD to control the snake.</p>
+                    <div>Score: <span id="snake-score">0</span></div>
+                    <div>High: <span id="snake-high">0</span></div>
+                    <div style="margin-top:8px; display:flex; gap:8px;">
+                        <button class="play-btn" id="snake-start">Start</button>
+                        <button class="play-btn" id="snake-pause">Pause</button>
+                        <button class="play-btn" id="snake-reset">Reset</button>
+                    </div>
+                    <div style="margin-top:12px">
+                        <label>Speed:</label>
+                        <select id="snake-speed" style="margin-left:8px">
+                            <option value="120">Slow</option>
+                            <option value="90">Normal</option>
+                            <option value="60" selected>Fast</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -374,6 +419,255 @@
             // reset but keep starter selection
             board = Array(9).fill(null); gameOver=false; statusEl.textContent='Choose a mode to start'; renderBoard();
         });
+
+
+        // --- Memory Game implementation ---
+        (function(){
+            const EMOJIS = ['🍎','🍌','🍇','🍓','🍒','🍍','🥝','🍉']; // 8 pairs
+            const memBoardEl = document.getElementById('memory-board');
+            const memMovesEl = document.getElementById('mem-moves');
+            const memMatchesEl = document.getElementById('mem-matches');
+            const memTimeEl = document.getElementById('mem-time');
+            const memResetBtn = document.getElementById('mem-reset');
+            const memShuffleBtn = document.getElementById('mem-shuffle');
+
+            let cards = []; // { emoji, matched }
+            let first = null, second = null;
+            let moves = 0, matches = 0;
+            let timer = null, startTime = null;
+
+            function formatTime(ms){
+                const sec = Math.floor(ms/1000);
+                const mm = String(Math.floor(sec/60)).padStart(2,'0');
+                const ss = String(sec%60).padStart(2,'0');
+                return mm + ':' + ss;
+            }
+
+            function startTimer(){
+                if(timer) return;
+                startTime = Date.now();
+                timer = setInterval(()=>{
+                    memTimeEl.textContent = formatTime(Date.now()-startTime);
+                }, 250);
+            }
+            function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
+
+            function shuffleArray(a){
+                for(let i=a.length-1;i>0;i--){
+                    const j = Math.floor(Math.random()*(i+1));
+                    [a[i],a[j]] = [a[j],a[i]];
+                }
+            }
+
+            function buildCards(){
+                const pairList = EMOJIS.concat(EMOJIS).slice(0,16);
+                cards = pairList.map(e=>({emoji:e,matched:false}));
+                shuffleArray(cards);
+            }
+
+            function render(){
+                memBoardEl.innerHTML = '';
+                cards.forEach((c,i)=>{
+                    const card = document.createElement('div');
+                    card.className = 'card' + (c === first || c === second || c.matched ? ' flipped' : '');
+                    card.dataset.index = i;
+                    const inner = document.createElement('div'); inner.className='card-inner';
+                    const front = document.createElement('div'); front.className='card-face card-front'; front.textContent = c.emoji;
+                    const back = document.createElement('div'); back.className='card-face card-back'; back.textContent = '❓';
+                    inner.appendChild(front); inner.appendChild(back);
+                    card.appendChild(inner);
+                    card.addEventListener('click', ()=> onCardClick(i));
+                    memBoardEl.appendChild(card);
+                });
+                memMovesEl.textContent = moves;
+                memMatchesEl.textContent = matches;
+            }
+
+            function onCardClick(i){
+                if(cards[i].matched) return;
+                if(first && second) return; // waiting
+                startTimer();
+                if(!first){ first = cards[i]; first.index = i; render(); return; }
+                if(first && !second){
+                    if(first.index === i) return; // click same
+                    second = cards[i]; second.index = i;
+                    moves++;
+                    render();
+                    // check
+                    if(first.emoji === second.emoji){
+                        first.matched = true; second.matched = true; matches++;
+                        first = null; second = null;
+                        if(matches === EMOJIS.length) onWin();
+                        render();
+                    } else {
+                        // flip back after delay
+                        setTimeout(()=>{
+                            first = null; second = null; render();
+                        }, 800);
+                    }
+                    memMovesEl.textContent = moves;
+                    memMatchesEl.textContent = matches;
+                }
+            }
+
+            function onWin(){
+                stopTimer();
+                setTimeout(()=>{
+                    alert('You won! Moves: ' + moves + '\nTime: ' + memTimeEl.textContent);
+                }, 300);
+            }
+
+            function reset(full=true){
+                moves = 0; matches = 0; first = null; second = null; stopTimer(); memTimeEl.textContent='00:00';
+                if(full) buildCards(); render();
+            }
+
+            memResetBtn.addEventListener('click', ()=> reset(true));
+            memShuffleBtn.addEventListener('click', ()=> { shuffleArray(cards); render(); });
+
+            // initialize when memory view opened
+            document.querySelector('button[data-game="memory"]').addEventListener('click', ()=>{ reset(true); });
+
+            // first load
+            buildCards(); render();
+        })();
+
+
+        // --- Snake implementation ---
+        (function(){
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            const scoreEl = document.getElementById('snake-score');
+            const highEl = document.getElementById('snake-high');
+            const startBtn = document.getElementById('snake-start');
+            const pauseBtn = document.getElementById('snake-pause');
+            const resetBtn = document.getElementById('snake-reset');
+            const speedSelect = document.getElementById('snake-speed');
+
+            const tileCount = 21; // fits 420 canvas with 20px tiles
+            const tileSize = Math.floor(canvas.width / tileCount);
+
+            let game = {
+                snake: [{x:10,y:10}],
+                dir: {x:0,y:0},
+                food: null,
+                running: false,
+                score: 0,
+                intervalId: null,
+                speed: parseInt(speedSelect.value,10)
+            };
+
+            function randPos(){
+                return { x: Math.floor(Math.random()*tileCount), y: Math.floor(Math.random()*tileCount) };
+            }
+
+            function placeFood(){
+                let pos;
+                do { pos = randPos(); }
+                while(game.snake.some(s=>s.x===pos.x && s.y===pos.y));
+                game.food = pos;
+            }
+
+            function draw(){
+                ctx.fillStyle = '#f6f7fb';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+                // draw food
+                if(game.food){
+                    ctx.fillStyle = '#ff4d4d';
+                    roundRect(ctx, game.food.x*tileSize+2, game.food.y*tileSize+2, tileSize-4, tileSize-4, 6);
+                }
+                // draw snake
+                for(let i=0;i<game.snake.length;i++){
+                    const s = game.snake[i];
+                    ctx.fillStyle = i===0 ? '#2ecc71' : '#27ae60';
+                    roundRect(ctx, s.x*tileSize+2, s.y*tileSize+2, tileSize-4, tileSize-4, 6);
+                }
+            }
+
+            function roundRect(ctx, x, y, w, h, r){
+                ctx.beginPath();
+                ctx.moveTo(x+r, y);
+                ctx.arcTo(x+w, y, x+w, y+h, r);
+                ctx.arcTo(x+w, y+h, x, y+h, r);
+                ctx.arcTo(x, y+h, x, y, r);
+                ctx.arcTo(x, y, x+w, y, r);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            function step(){
+                const head = { x: game.snake[0].x + game.dir.x, y: game.snake[0].y + game.dir.y };
+                // wrap around
+                if(head.x < 0) head.x = tileCount-1;
+                if(head.x >= tileCount) head.x = 0;
+                if(head.y < 0) head.y = tileCount-1;
+                if(head.y >= tileCount) head.y = 0;
+                // check collision with self
+                if(game.snake.some(s=>s.x===head.x && s.y===head.y)){
+                    gameOver(); return;
+                }
+                game.snake.unshift(head);
+                // check food
+                if(game.food && head.x === game.food.x && head.y === game.food.y){
+                    game.score += 1; scoreEl.textContent = game.score; placeFood();
+                } else {
+                    game.snake.pop();
+                }
+                draw();
+            }
+
+            function gameOver(){
+                stop();
+                const prev = parseInt(localStorage.getItem('snake-high')||'0',10);
+                if(game.score > prev) localStorage.setItem('snake-high', String(game.score));
+                highEl.textContent = localStorage.getItem('snake-high')||'0';
+                setTimeout(()=> alert('Game over! Score: ' + game.score), 100);
+            }
+
+            function start(){
+                if(game.running) return;
+                if(game.dir.x===0 && game.dir.y===0){ game.dir = {x:1,y:0}; } // default right
+                game.running = true;
+                game.speed = parseInt(speedSelect.value,10);
+                game.intervalId = setInterval(step, game.speed);
+            }
+            function stop(){ game.running=false; if(game.intervalId) { clearInterval(game.intervalId); game.intervalId=null; } }
+            function reset(full=true){ stop(); game.snake = [{x:10,y:10}]; game.dir={x:0,y:0}; game.score=0; scoreEl.textContent='0'; if(full) placeFood(); draw(); }
+
+            // keyboard
+            window.addEventListener('keydown', (e)=>{
+                const key = e.key;
+                if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'].indexOf(key)===-1) return;
+                e.preventDefault();
+                const dirMap = {
+                    'ArrowUp': {x:0,y:-1}, 'w': {x:0,y:-1}, 'W': {x:0,y:-1},
+                    'ArrowDown': {x:0,y:1}, 's': {x:0,y:1}, 'S': {x:0,y:1},
+                    'ArrowLeft': {x:-1,y:0}, 'a': {x:-1,y:0}, 'A': {x:-1,y:0},
+                    'ArrowRight': {x:1,y:0}, 'd': {x:1,y:0}, 'D': {x:1,y:0}
+                };
+                const nd = dirMap[key];
+                if(!nd) return;
+                // prevent reversing
+                if(game.snake.length>1 && (game.snake[0].x + nd.x === game.snake[1].x) && (game.snake[0].y + nd.y === game.snake[1].y)) return;
+                game.dir = nd;
+                // if not running, start immediately
+                if(!game.running) start();
+            });
+
+            startBtn.addEventListener('click', ()=> start());
+            pauseBtn.addEventListener('click', ()=> { if(game.running) stop(); else start(); });
+            resetBtn.addEventListener('click', ()=> { reset(true); });
+            speedSelect.addEventListener('change', ()=>{
+                if(game.running){ stop(); start(); }
+            });
+
+            // init
+            highEl.textContent = localStorage.getItem('snake-high')||'0';
+            placeFood(); draw();
+
+            // when opening snake view, reset game state but keep highscore
+            document.querySelector('button[data-game="snake"]').addEventListener('click', ()=>{ reset(true); });
+        })();
 
     </script>
 </body>
