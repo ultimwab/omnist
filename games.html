@@ -59,7 +59,7 @@
         /* Tic Tac Toe styles */
         .tictactoe-wrap { display:flex; gap:24px; align-items:flex-start; justify-content:center; flex-wrap:wrap; }
         .board { display:grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap:10px; }
-        .cell { width:100px; height:100px; background: #fff; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2.4rem; cursor:pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+        .cell { width:100px; height:100px; background: #fff; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2.4rem; cursor:pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.08); font-weight:bold; }
         .cell.disabled { pointer-events:none; opacity:0.8; }
         .tt-controls { max-width: 320px; background: rgba(255,255,255,0.95); padding:16px; border-radius:10px; box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
         .status { margin-bottom:12px; font-weight:600; }
@@ -95,8 +95,43 @@
         #snake-canvas { background:#fafafa; border-radius:8px; box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
         .snake-controls { max-width:320px; background: rgba(255,255,255,0.95); padding:16px; border-radius:10px; box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
 
+        /* 2048 styles */
+        .game-2048 { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+        .board-2048 { display:grid; grid-template-columns:repeat(4,80px); grid-template-rows:repeat(4,80px); gap:10px; background:#bbada0; padding:10px; border-radius:6px; }
+        .tile { display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:bold; border-radius:3px; background:#cdc1b4; color:#776e65; transition:all 0.1s; }
+        .tile.t2 { background:#eee4da; } .tile.t4 { background:#ede0c8; }
+        .tile.t8 { background:#f2b179; color:white; } .tile.t16 { background:#f59563; color:white; }
+        .tile.t32 { background:#f67c5f; color:white; } .tile.t64 { background:#f65e3b; color:white; }
+        .tile.t128 { background:#edcf72; font-size:1.6rem; color:#776e65; } .tile.t256 { background:#edcc61; font-size:1.6rem; color:#776e65; }
+        .tile.t512 { background:#edc850; font-size:1.6rem; color:#776e65; } .tile.t1024 { background:#edc53f; font-size:1.4rem; color:#776e65; }
+        .tile.t2048 { background:#edc22e; font-size:1.4rem; color:#776e65; }
+        .board-2048-info { max-width:320px; background:rgba(255,255,255,0.95); padding:16px; border-radius:10px; box-shadow:0 6px 12px rgba(0,0,0,0.08); }
+
+        /* Quiz styles */
+        .quiz-wrap { max-width:640px; margin:0 auto; }
+        .quiz-card { background:#fafafa; padding:20px; border-radius:8px; margin-bottom:16px; }
+        .quiz-question { font-weight:600; margin-bottom:12px; font-size:1.1rem; }
+        .quiz-options { display:flex; flex-direction:column; gap:8px; }
+        .option-btn { padding:12px; border:1px solid #ddd; border-radius:6px; background:white; cursor:pointer; text-align:left; transition:all 0.2s; }
+        .option-btn:hover { background:#f0f0f0; border-color:#667eea; }
+        .option-btn.selected { background:#667eea; color:white; border-color:#667eea; }
+        .option-btn.correct { background:#2ecc71; color:white; border-color:#2ecc71; }
+        .option-btn.wrong { background:#e74c3c; color:white; border-color:#e74c3c; }
+        .quiz-score { text-align:center; font-size:1.2rem; font-weight:600; margin:20px 0; }
+
+        /* Hangman styles */
+        .hangman-wrap { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+        .hangman-canvas { background:#fafafa; border-radius:8px; box-shadow:0 6px 12px rgba(0,0,0,0.06); }
+        .hangman-content { max-width:320px; background:rgba(255,255,255,0.95); padding:16px; border-radius:10px; box-shadow:0 6px 12px rgba(0,0,0,0.08); }
+        .word-display { font-size:2rem; letter-spacing:8px; text-align:center; margin:12px 0; font-family:monospace; }
+        .letters { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; justify-content:center; }
+        .letter-btn { width:32px; height:32px; padding:4px; border:1px solid #ddd; border-radius:4px; cursor:pointer; font-weight:bold; background:white; transition:all 0.2s; }
+        .letter-btn:hover:not(:disabled) { background:#667eea; color:white; }
+        .letter-btn:disabled { background:#e0e0e0; color:#999; cursor:not-allowed; }
+        .hangman-status { text-align:center; margin:12px 0; font-weight:600; }
+
         /* Responsive */
-        @media (max-width:700px){ .board { grid-template-columns: repeat(3,70px); grid-template-rows: repeat(3,70px); } .cell{ width:70px; height:70px; font-size:1.6rem; } .memory-board { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width:700px){ .board { grid-template-columns: repeat(3,70px); grid-template-rows: repeat(3,70px); } .cell{ width:70px; height:70px; font-size:1.6rem; } .memory-board { grid-template-columns:repeat(3,1fr); } .board-2048 { grid-template-columns:repeat(4,60px); grid-template-rows:repeat(4,60px); } }
     </style>
 </head>
 <body>
@@ -220,39 +255,56 @@
             </div>
         </div>
 
-        <!-- 2048 view (placeholder) -->
+        <!-- 2048 view -->
         <div id="2048" class="view screen">
             <button class="back" data-back>← Back to games</button>
             <div style="height:16px"></div>
-            <div class="center">
-                <h2>2048</h2>
-                <p class="coming-soon">2048 implementation coming soon. Swipe or use arrow keys to move tiles.</p>
-                <button class="play-btn" onclick="alert('2048: coming soon')">Start (demo)</button>
+            <div class="game-2048">
+                <div>
+                    <div class="board-2048" id="board-2048"></div>
+                </div>
+                <div class="board-2048-info">
+                    <h3>2048</h3>
+                    <p>Use arrow keys or WASD to move tiles.</p>
+                    <div>Score: <span id="game-2048-score">0</span></div>
+                    <div>Best: <span id="game-2048-best">0</span></div>
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button class="play-btn" id="game-2048-new">New Game</button>
+                        <button class="play-btn" id="game-2048-reset">Reset</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Quiz view (placeholder) -->
+        <!-- Quiz view -->
         <div id="quiz" class="view screen">
             <button class="back" data-back>← Back to games</button>
             <div style="height:16px"></div>
             <div class="center">
                 <h2>Quiz Master</h2>
-                <p class="coming-soon">Trivia engine will be available soon. Sample question:</p>
-                <div style="background:#fafafa; padding:12px; border-radius:8px; width:100%; max-width:640px;">
-                    <p><strong>Q:</strong> Which planet is known as the Red Planet?</p>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="play-btn">A: Earth</button><button class="play-btn">B: Mars</button><button class="play-btn">C: Venus</button></div>
+                <div class="quiz-wrap" id="quiz-container">
+                    <div class="quiz-score">Score: <span id="quiz-score">0</span>/<span id="quiz-total">0</span></div>
+                    <div id="quiz-content"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Hangman view (placeholder) -->
+        <!-- Hangman view -->
         <div id="hangman" class="view screen">
             <button class="back" data-back>← Back to games</button>
             <div style="height:16px"></div>
-            <div class="center">
-                <h2>Hangman</h2>
-                <p class="coming-soon">Hangman will be interactive soon. Guess letters before the man is complete.</p>
-                <button class="play-btn" onclick="alert('Hangman: coming soon')">Start (demo)</button>
+            <div class="hangman-wrap">
+                <canvas id="hangman-canvas" width="200" height="250"></canvas>
+                <div class="hangman-content">
+                    <h3>Hangman</h3>
+                    <div class="word-display" id="word-display">_ _ _ _ _ _</div>
+                    <div class="hangman-status" id="hangman-status">Guesses left: <span id="hangman-guesses">6</span></div>
+                    <div class="letters" id="hangman-letters"></div>
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button class="play-btn" id="hangman-new">New Game</button>
+                        <button class="play-btn" id="hangman-reset">Reset</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -321,7 +373,6 @@
             statusEl.textContent = (vsAI && currentPlayer === aiPlayer) ? 'Computer thinking...' : (currentPlayer + "'s turn");
 
             if(vsAI && currentPlayer === aiPlayer && !gameOver){
-                // small delay so user sees the move
                 setTimeout(() => {
                     const move = bestMove(board, aiPlayer);
                     makeMove(move, aiPlayer);
@@ -339,12 +390,9 @@
             return null;
         }
 
-        // Minimax AI
         let aiPlayer = 'O';
         function bestMove(boardState, player){
-            // if center free and first move, choose center
             if(boardState.filter(x=>x).length===0) return 4;
-
             const avail = boardState.map((v,i)=> v?null:i).filter(i=>i!==null);
             let bestScore = -Infinity;
             let move = avail[0];
@@ -369,20 +417,19 @@
                     const copy = bs.slice(); copy[i] = player;
                     best = Math.max(best, minimax(copy, false, player, other));
                 }
-                return best - 0.1; // prefer faster wins
+                return best - 0.1;
             } else {
                 let best = Infinity;
                 for(const i of avail){
                     const copy = bs.slice(); copy[i] = other;
                     best = Math.min(best, minimax(copy, true, player, other));
                 }
-                return best + 0.1; // avoid slower losses
+                return best + 0.1;
             }
         }
 
         function opponent(p){ return p === 'X' ? 'O' : 'X'; }
 
-        // Controls
         mode2pBtn.addEventListener('click', ()=>{
             vsAI = false; gameOver = false; board = Array(9).fill(null); currentPlayer = 'X';
             statusEl.textContent = "2 Players — " + currentPlayer + "'s turn";
@@ -390,10 +437,8 @@
         });
         modeAiBtn.addEventListener('click', ()=>{
             vsAI = true; gameOver = false; board = Array(9).fill(null);
-            // player is starter selection
             const starter = starterSelect.value || 'X';
             currentPlayer = starter;
-            // player always human; set aiPlayer accordingly
             aiPlayer = opponent(starter);
             statusEl.textContent = (currentPlayer === aiPlayer) ? 'Computer thinking...' : currentPlayer + "'s turn";
             renderBoard();
@@ -410,20 +455,17 @@
             if(gameOver) return; const h = bestMove(board, currentPlayer); if(h!==undefined) alert('Suggested move: cell ' + (h+1)); else alert('No moves');
         });
 
-        // initialize
         renderBoard();
         statusEl.textContent = 'Choose a mode to start';
 
-        // When navigating to tic tac toe view, ensure board is visible
         document.querySelector('button[data-game="tictactoe"]').addEventListener('click', ()=>{
-            // reset but keep starter selection
             board = Array(9).fill(null); gameOver=false; statusEl.textContent='Choose a mode to start'; renderBoard();
         });
 
 
         // --- Memory Game implementation ---
         (function(){
-            const EMOJIS = ['🍎','🍌','🍇','🍓','🍒','🍍','🥝','🍉']; // 8 pairs
+            const EMOJIS = ['🍎','🍌','🍇','🍓','🍒','🍍','🥝','🍉'];
             const memBoardEl = document.getElementById('memory-board');
             const memMovesEl = document.getElementById('mem-moves');
             const memMatchesEl = document.getElementById('mem-matches');
@@ -431,7 +473,7 @@
             const memResetBtn = document.getElementById('mem-reset');
             const memShuffleBtn = document.getElementById('mem-shuffle');
 
-            let cards = []; // { emoji, matched }
+            let cards = [];
             let first = null, second = null;
             let moves = 0, matches = 0;
             let timer = null, startTime = null;
@@ -485,22 +527,20 @@
 
             function onCardClick(i){
                 if(cards[i].matched) return;
-                if(first && second) return; // waiting
+                if(first && second) return;
                 startTimer();
                 if(!first){ first = cards[i]; first.index = i; render(); return; }
                 if(first && !second){
-                    if(first.index === i) return; // click same
+                    if(first.index === i) return;
                     second = cards[i]; second.index = i;
                     moves++;
                     render();
-                    // check
                     if(first.emoji === second.emoji){
                         first.matched = true; second.matched = true; matches++;
                         first = null; second = null;
                         if(matches === EMOJIS.length) onWin();
                         render();
                     } else {
-                        // flip back after delay
                         setTimeout(()=>{
                             first = null; second = null; render();
                         }, 800);
@@ -525,10 +565,8 @@
             memResetBtn.addEventListener('click', ()=> reset(true));
             memShuffleBtn.addEventListener('click', ()=> { shuffleArray(cards); render(); });
 
-            // initialize when memory view opened
             document.querySelector('button[data-game="memory"]').addEventListener('click', ()=>{ reset(true); });
 
-            // first load
             buildCards(); render();
         })();
 
@@ -544,7 +582,7 @@
             const resetBtn = document.getElementById('snake-reset');
             const speedSelect = document.getElementById('snake-speed');
 
-            const tileCount = 21; // fits 420 canvas with 20px tiles
+            const tileCount = 21;
             const tileSize = Math.floor(canvas.width / tileCount);
 
             let game = {
@@ -571,12 +609,10 @@
             function draw(){
                 ctx.fillStyle = '#f6f7fb';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
-                // draw food
                 if(game.food){
                     ctx.fillStyle = '#ff4d4d';
                     roundRect(ctx, game.food.x*tileSize+2, game.food.y*tileSize+2, tileSize-4, tileSize-4, 6);
                 }
-                // draw snake
                 for(let i=0;i<game.snake.length;i++){
                     const s = game.snake[i];
                     ctx.fillStyle = i===0 ? '#2ecc71' : '#27ae60';
@@ -597,17 +633,14 @@
 
             function step(){
                 const head = { x: game.snake[0].x + game.dir.x, y: game.snake[0].y + game.dir.y };
-                // wrap around
                 if(head.x < 0) head.x = tileCount-1;
                 if(head.x >= tileCount) head.x = 0;
                 if(head.y < 0) head.y = tileCount-1;
                 if(head.y >= tileCount) head.y = 0;
-                // check collision with self
                 if(game.snake.some(s=>s.x===head.x && s.y===head.y)){
                     gameOver(); return;
                 }
                 game.snake.unshift(head);
-                // check food
                 if(game.food && head.x === game.food.x && head.y === game.food.y){
                     game.score += 1; scoreEl.textContent = game.score; placeFood();
                 } else {
@@ -626,7 +659,7 @@
 
             function start(){
                 if(game.running) return;
-                if(game.dir.x===0 && game.dir.y===0){ game.dir = {x:1,y:0}; } // default right
+                if(game.dir.x===0 && game.dir.y===0){ game.dir = {x:1,y:0}; }
                 game.running = true;
                 game.speed = parseInt(speedSelect.value,10);
                 game.intervalId = setInterval(step, game.speed);
@@ -634,7 +667,6 @@
             function stop(){ game.running=false; if(game.intervalId) { clearInterval(game.intervalId); game.intervalId=null; } }
             function reset(full=true){ stop(); game.snake = [{x:10,y:10}]; game.dir={x:0,y:0}; game.score=0; scoreEl.textContent='0'; if(full) placeFood(); draw(); }
 
-            // keyboard
             window.addEventListener('keydown', (e)=>{
                 const key = e.key;
                 if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'].indexOf(key)===-1) return;
@@ -647,10 +679,8 @@
                 };
                 const nd = dirMap[key];
                 if(!nd) return;
-                // prevent reversing
                 if(game.snake.length>1 && (game.snake[0].x + nd.x === game.snake[1].x) && (game.snake[0].y + nd.y === game.snake[1].y)) return;
                 game.dir = nd;
-                // if not running, start immediately
                 if(!game.running) start();
             });
 
@@ -661,12 +691,262 @@
                 if(game.running){ stop(); start(); }
             });
 
-            // init
             highEl.textContent = localStorage.getItem('snake-high')||'0';
             placeFood(); draw();
 
-            // when opening snake view, reset game state but keep highscore
             document.querySelector('button[data-game="snake"]').addEventListener('click', ()=>{ reset(true); });
+        })();
+
+
+        // --- 2048 implementation ---
+        (function(){
+            const boardEl = document.getElementById('board-2048');
+            const scoreEl = document.getElementById('game-2048-score');
+            const bestEl = document.getElementById('game-2048-best');
+            const newBtn = document.getElementById('game-2048-new');
+            const resetBtn = document.getElementById('game-2048-reset');
+
+            let grid = Array(16).fill(0);
+            let score = 0;
+            let best = parseInt(localStorage.getItem('2048-best')||'0',10);
+
+            function addTile(){
+                const empty = grid.map((v,i)=>v?null:i).filter(i=>i!==null);
+                if(empty.length){
+                    const idx = empty[Math.floor(Math.random()*empty.length)];
+                    grid[idx] = Math.random()<0.9 ? 2 : 4;
+                }
+            }
+
+            function render(){
+                boardEl.innerHTML='';
+                grid.forEach((v,i)=>{
+                    const tile = document.createElement('div');
+                    tile.className = 'tile' + (v ? ' t'+v : '');
+                    tile.textContent = v || '';
+                    boardEl.appendChild(tile);
+                });
+                scoreEl.textContent = score;
+                bestEl.textContent = best;
+            }
+
+            function slideLeft(row){
+                row = row.filter(v=>v);
+                for(let i=0;i<row.length-1;i++){
+                    if(row[i]===row[i+1]){
+                        row[i]*=2; score+=row[i]; row.splice(i+1,1);
+                    }
+                }
+                while(row.length<4) row.push(0);
+                return row;
+            }
+
+            function move(dir){
+                let moved = false;
+                const old = JSON.stringify(grid);
+                if(dir==='left' || dir==='right'){
+                    for(let i=0;i<4;i++){
+                        const row = grid.slice(i*4, i*4+4);
+                        const newRow = dir==='left' ? slideLeft(row) : slideLeft(row.reverse()).reverse();
+                        grid.splice(i*4, 4, ...newRow);
+                    }
+                } else {
+                    for(let i=0;i<4;i++){
+                        const col = [grid[i], grid[i+4], grid[i+8], grid[i+12]];
+                        const newCol = dir==='up' ? slideLeft(col) : slideLeft(col.reverse()).reverse();
+                        grid[i] = newCol[0]; grid[i+4] = newCol[1]; grid[i+8] = newCol[2]; grid[i+12] = newCol[3];
+                    }
+                }
+                moved = JSON.stringify(grid) !== old;
+                if(moved){ addTile(); render(); }
+                return moved;
+            }
+
+            function newGame(){
+                grid = Array(16).fill(0);
+                score = 0;
+                addTile(); addTile();
+                render();
+            }
+
+            function reset(){
+                localStorage.setItem('2048-best', '0');
+                best = 0;
+                newGame();
+            }
+
+            newBtn.addEventListener('click', newGame);
+            resetBtn.addEventListener('click', reset);
+
+            window.addEventListener('keydown', (e)=>{
+                const dirs = {
+                    'ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down',
+                    'a':'left','d':'right','w':'up','s':'down','A':'left','D':'right','W':'up','S':'down'
+                };
+                if(!dirs[e.key]) return;
+                e.preventDefault();
+                const moved = move(dirs[e.key]);
+                if(moved && grid.includes(2048)){
+                    setTimeout(()=>alert('You reached 2048!'),100);
+                }
+                if(moved && !grid.some(v=>v===0) && !canMove()){
+                    setTimeout(()=>alert('Game Over! Score: '+score),100);
+                }
+                if(score > best){ best = score; localStorage.setItem('2048-best', String(best)); }
+            });
+
+            function canMove(){
+                for(let i=0;i<16;i++){
+                    if(!grid[i]) return true;
+                    if(i%4<3 && grid[i]===grid[i+1]) return true;
+                    if(i<12 && grid[i]===grid[i+4]) return true;
+                }
+                return false;
+            }
+
+            document.querySelector('button[data-game="2048"]').addEventListener('click', newGame);
+
+            newGame();
+        })();
+
+
+        // --- Quiz implementation ---
+        (function(){
+            const QUESTIONS = [
+                {q:'Which planet is known as the Red Planet?',o:['Earth','Mars','Venus','Jupiter'],a:'Mars'},
+                {q:'What is the capital of France?',o:['London','Berlin','Paris','Madrid'],a:'Paris'},
+                {q:'Who wrote "Romeo and Juliet"?',o:['Mark Twain','William Shakespeare','Jane Austen','Charles Dickens'],a:'William Shakespeare'},
+                {q:'What is the largest ocean?',o:['Atlantic','Indian','Arctic','Pacific'],a:'Pacific'},
+                {q:'What year did WW2 end?',o:['1943','1944','1945','1946'],a:'1945'},
+                {q:'What is the smallest country?',o:['Monaco','Liechtenstein','Vatican City','San Marino'],a:'Vatican City'},
+                {q:'Who painted the Mona Lisa?',o:['Michelangelo','Leonardo da Vinci','Raphael','Donatello'],a:'Leonardo da Vinci'},
+                {q:'What is H2O?',o:['Hydrogen','Oxygen','Water','Salt'],a:'Water'}
+            ];
+
+            let quiz = { idx:0, score:0, answered:false };
+            const container = document.getElementById('quiz-content');
+            const scoreSpan = document.getElementById('quiz-score');
+            const totalSpan = document.getElementById('quiz-total');
+
+            function shuffle(a){
+                for(let i=a.length-1;i>0;i--){
+                    const j=Math.floor(Math.random()*(i+1));
+                    [a[i],a[j]]=[a[j],a[i]];
+                }
+            }
+
+            function render(){
+                if(quiz.idx>=QUESTIONS.length){
+                    container.innerHTML='<div class="quiz-card"><div class="quiz-question">Quiz Complete!</div><p>Final Score: '+quiz.score+'/'+QUESTIONS.length+'</p><button class="play-btn" onclick="location.reload()">Play Again</button></div>';
+                    return;
+                }
+                const q=QUESTIONS[quiz.idx];
+                const opts=[...q.o];
+                shuffle(opts);
+                let html='<div class="quiz-card"><div class="quiz-question">'+q.q+'</div><div class="quiz-options">';
+                opts.forEach(o=>{
+                    html+='<button class="option-btn" data-opt="'+o+'">'+ o+'</button>';
+                });
+                html+='</div></div>';
+                container.innerHTML=html;
+                document.querySelectorAll('.option-btn').forEach(btn=>{
+                    btn.addEventListener('click',()=>{
+                        if(quiz.answered) return;
+                        quiz.answered=true;
+                        const correct = btn.getAttribute('data-opt')===q.a;
+                        if(correct){ quiz.score++; btn.classList.add('correct'); } else { btn.classList.add('wrong'); document.querySelectorAll('.option-btn').forEach(b=>{ if(b.getAttribute('data-opt')===q.a) b.classList.add('correct'); }); }
+                        scoreSpan.textContent=quiz.score;
+                        setTimeout(()=>{ quiz.idx++; quiz.answered=false; render(); },1200);
+                    });
+                });
+                totalSpan.textContent=QUESTIONS.length;
+            }
+
+            document.querySelector('button[data-game="quiz"]').addEventListener('click',()=>{
+                quiz={idx:0,score:0,answered:false};
+                render();
+            });
+
+            render();
+        })();
+
+
+        // --- Hangman implementation ---
+        (function(){
+            const WORDS=['HANGMAN','JAVASCRIPT','PROGRAMMING','MYSTERY','PUZZLE','CHALLENGE','VICTORY','BROWSER'];
+            const canvas=document.getElementById('hangman-canvas');
+            const ctx=canvas.getContext('2d');
+            const wordDisplay=document.getElementById('word-display');
+            const guessesDisplay=document.getElementById('hangman-guesses');
+            const lettersDiv=document.getElementById('hangman-letters');
+            const newBtn=document.getElementById('hangman-new');
+            const resetBtn=document.getElementById('hangman-reset');
+
+            let game={word:'',guessed:new Set(),wrong:0,won:false,lost:false};
+
+            function drawHangman(w){
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                ctx.strokeStyle='#333'; ctx.lineWidth=2;
+                if(w>0){ ctx.beginPath(); ctx.moveTo(50,240); ctx.lineTo(50,20); ctx.stroke(); }
+                if(w>1){ ctx.beginPath(); ctx.moveTo(50,20); ctx.lineTo(130,20); ctx.stroke(); }
+                if(w>2){ ctx.beginPath(); ctx.moveTo(130,20); ctx.lineTo(130,50); ctx.stroke(); }
+                if(w>3){ ctx.beginPath(); ctx.arc(130,70,20,0,Math.PI*2); ctx.stroke(); }
+                if(w>4){ ctx.beginPath(); ctx.moveTo(130,90); ctx.lineTo(130,150); ctx.stroke(); }
+                if(w>5){ ctx.beginPath(); ctx.moveTo(130,110); ctx.lineTo(100,130); ctx.stroke(); }
+                if(w>6){ ctx.beginPath(); ctx.moveTo(130,110); ctx.lineTo(160,130); ctx.stroke(); }
+            }
+
+            function newGame(){
+                game.word=WORDS[Math.floor(Math.random()*WORDS.length)];
+                game.guessed=new Set();
+                game.wrong=0;
+                game.won=false;
+                game.lost=false;
+                renderLetters();
+                renderWord();
+                drawHangman(0);
+            }
+
+            function renderWord(){
+                const display=game.word.split('').map(c=>game.guessed.has(c)?c:'_').join(' ');
+                wordDisplay.textContent=display;
+                guessesDisplay.textContent=6-game.wrong;
+                if(!display.includes('_')) game.won=true;
+            }
+
+            function renderLetters(){
+                lettersDiv.innerHTML='';
+                for(let c='A'.charCodeAt(0);c<='Z'.charCodeAt(0);c++){
+                    const letter=String.fromCharCode(c);
+                    const btn=document.createElement('button');
+                    btn.className='letter-btn';
+                    btn.textContent=letter;
+                    btn.disabled=game.guessed.has(letter);
+                    btn.addEventListener('click',()=>guessLetter(letter,btn));
+                    lettersDiv.appendChild(btn);
+                }
+            }
+
+            function guessLetter(letter,btn){
+                if(game.guessed.has(letter)||game.won||game.lost) return;
+                game.guessed.add(letter);
+                if(!game.word.includes(letter)){
+                    game.wrong++;
+                    if(game.wrong>=6) game.lost=true;
+                }
+                btn.disabled=true;
+                drawHangman(game.wrong);
+                renderWord();
+                if(game.won) setTimeout(()=>alert('You won! Word: '+game.word),100);
+                if(game.lost) setTimeout(()=>alert('Game Over! Word: '+game.word),100);
+            }
+
+            newBtn.addEventListener('click',newGame);
+            resetBtn.addEventListener('click',()=>{ localStorage.setItem('hangman-best','0'); newGame(); });
+
+            document.querySelector('button[data-game="hangman"]').addEventListener('click',newGame);
+
+            newGame();
         })();
 
     </script>
